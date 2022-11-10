@@ -1,0 +1,244 @@
+import textwrap
+
+
+def menu():
+    menu = """\n
+    ================= MENU =================
+    [d]\tDepositar
+    [s]\tSacar
+    [t]\tTransferência
+    [p]\tAplicação
+    [cp]\tCalculadora de Aplicação
+    [e]\tExtrato
+    [nc]\tNova Conta
+    [lc]\tListar Conta
+    [nu]\tNovo Usuário        
+    [x]\tSair
+    =>"""
+    return input(textwrap.dedent(menu))
+
+
+def depositar(saldo, valor, extrato, /):
+    if valor > 0:
+        saldo += valor
+        extrato += f"Depósito de R$ {valor:.2f}\n"
+        print("Deposito realizado com frequência! Acompanhe na opção Extrato.")
+
+    else:
+        print("Não conseguimos realizar seu depósito. O valor digitado está incorreto!")
+
+    return saldo, extrato
+
+
+def sacar(*, saldo, valor, extrato, limite, quantidade_saque, limite_saque):
+    excedeu_saldo = valor > saldo
+    excedeu_limte = valor > limite
+    excedeu_saques = quantidade_saque > limite_saque
+
+    if excedeu_saldo:
+        print("Saldo insuficiente! Deposite um valor para continuar transação.")
+
+    elif excedeu_limte:
+        print("Limite excedido! Aumente seu limite no caixa eletrônico ou diretamente com um consultor.")
+
+    elif excedeu_saques:
+        print("Você excedo o limite de Saque Diário. Tente novamente amanhã!")
+
+    elif valor > 0:
+        saldo -= valor
+        extrato += f"Saque: R$ {valor:.2f}\n"
+        quantidade_saque += 1
+        print("Saldo realizado com sucesso!")
+
+    else:
+        print("Opção inválida! Tente novamente.")
+
+    return saldo, extrato
+
+
+def transferir(*, saldo, transf_valor, limite, extrato) -> object:
+    excedeu_saldo_transf = transf_valor > saldo
+    excedeu_limite_trans = transf_valor > limite
+
+    if excedeu_saldo_transf:
+        print("Saldo insuficiente para realizar transferência!")
+
+    elif excedeu_limite_trans:
+        print("Limite excedido! Aumente seu limite no caixa eletrônico ou diretamente com um consultor.")
+
+    elif transf_valor > 0:
+        saldo -= transf_valor
+        extrato += f"Transferência: R$ {transf_valor:.2f}\n"
+        print("Transferência realizada com sucesso!")
+
+    else:
+        print("Opção inválida! Tente novamente.")
+
+    return saldo, extrato
+
+
+def aplicacao(*, saldo, valor_aplicado, extrato, ):
+    aplicado_excedeu_saldo = valor_aplicado > saldo
+
+    if aplicado_excedeu_saldo:
+        print("Saldo insuficiente para realizar aplicação!")
+
+    elif valor_aplicado > 0:
+        saldo -= valor_aplicado
+        extrato += f"Valor aplicado: R$ {valor_aplicado:.2f}"
+        print("Aplicação realizada com sucesso!")
+
+    else:
+        print("Opção inválida! Tente novamente.")
+
+    return saldo, extrato
+
+
+def exibir_extrato(saldo, /, *, extrato):
+    print("\nºººººººººººº EXTRATO ºººººººººººº")
+    print("Não houve saques até o momento." if not extrato else extrato)
+    print(f"\nSaldo: R$ {saldo:.2f}")
+    print("ºººººººººººººººººººººººººººººººººººº")
+
+
+def calculadora_aplicacao(aplicado_valor, meses, /):
+    calculo_aplicado = (aplicado_valor * 2 / 100) * meses
+
+    if aplicado_valor > 0:
+        print(f"A aplicação rendeu: R$ {calculo_aplicado:.2f}")
+        print(
+            f"O novo saldo da sua conta será de R$ {aplicado_valor + calculo_aplicado:.2f} ao final de {meses} meses.")
+
+    else:
+        print("Opção inválida! Tente novamente.")
+
+    return calculo_aplicado
+
+
+def criar_usuario(usuarios):
+    cpf = input("Informe o CPF (somente número): ")
+    usuario = filtrar_usuario(cpf, usuarios)
+
+    if usuario:
+        print("Que legal! Já existe um usuário com esse cpf.")
+        return
+
+    nome = input("Informe o nome completo: ")
+    data_nascimento = input("Informe a data de nascimento (dd-mm-aaaa): ")
+    endereco = input("Informe o endereço (logradouro, nº - bairro - cidade/sigla estado: ")
+
+    usuarios.append({"nome": nome, "data_nascimento": data_nascimento, "cpf": cpf, "endereco": endereco})
+
+    print("Usurário criado com sucesso!")
+
+
+def filtrar_usuario(cpf, usuarios):
+    usuarios_filtrados = [usuario for usuario in usuarios if usuario["cpf"] == cpf]
+    return usuarios_filtrados[0] if usuarios_filtrados else None
+
+
+def criar_conta(agencia, numero_conta, usuarios):
+    cpf = input("Informe o CPF do usuário: ")
+    usuario = filtrar_usuario(cpf, usuarios)
+
+    if usuario:
+        print("\n Conta criada com sucesso! ")
+        return {"agencia": agencia, "numero_conta": numero_conta, "usuario": usuario}
+
+
+def listar_contas(contas):
+    for conta in contas:
+        linha = f"""\
+            Agência:\t{conta['agencia']}
+            C/C:\t\t{conta['numero_conta']}
+            Titular:\t{conta['usuario']['nome']}
+        """
+
+        print("=" * 100)
+        print(textwrap.dedent(linha))
+
+
+def main():
+    agencia = "0001"
+
+    saldo = 0
+    limite = 500
+    limite_pix = 1000
+    extrato = ""
+    quantidade_saque = 0
+    limite_saque = 3
+    usuarios = []
+    contas = []
+
+    while True:
+        opcao = menu()
+
+        if opcao == "d":
+            valor = float(input("Digite o valor que deseja depositar: "))
+
+            saldo, extrato = depositar(saldo, valor, extrato)
+
+        elif opcao == "s":
+            valor = float(input("Informe o valor que deseja sacar: "))
+
+            saldo, extrato = sacar(
+                saldo=saldo,
+                valor=valor,
+                extrato=extrato,
+                limite=limite,
+                quantidade_saque=quantidade_saque,
+                limite_saque=limite_saque,
+            )
+
+        elif opcao == "t":
+            transf_agencia = int(input("Digite o número da agência: "))
+            transf_conta = int(input("Digite o número da conta: "))
+            transf_valor = float(input("Quanto você deseja transferir: "))
+
+            saldo, extrato = transferir(
+                saldo=saldo,
+                transf_valor=transf_valor,
+                limite=limite,
+                extrato=extrato,
+            )
+
+        elif opcao == "p":
+            print("Seja bem vindo a aplicação do Banco Psenns! Aqui você aplica seu dinheiro com juros de 2% a.m. Aqui seu dinheiro rende!")
+            valor_aplicado = float(input("Digite o valor que você deseja aplicar: "))
+
+            saldo, extrato = aplicacao(
+                saldo=saldo,
+                valor_aplicado=valor_aplicado,
+                extrato=extrato
+            )
+
+        elif opcao == "cp":
+            aplicado_valor = float(input("Quanto você deseja aplicar: "))
+            meses = int(input("Digite por quantos meses deseja aplicar: "))
+
+            calculo_aplicado = calculadora_aplicacao(aplicado_valor, meses)
+
+        elif opcao == "e":
+            exibir_extrato(saldo, extrato=extrato)
+
+        elif opcao == "nu":
+            criar_usuario(usuarios)
+
+        elif opcao == "nc":
+            numero_conta = len(contas) + 1
+            conta = criar_conta(agencia, numero_conta, usuarios)
+
+            if conta:
+                contas.append(conta)
+
+        elif opcao == "lc":
+            listar_contas(contas)
+
+        elif opcao == "x":
+            print('Até breve!')
+            break
+
+        else:
+            print("Operaçao inválida! Tente novamente.")
+
+main()
